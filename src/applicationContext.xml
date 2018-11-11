@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd ">
+	
+<!--配置c3p0 -->	
+	<context:property-placeholder location="classpath:db.properties"/>
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driver}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+
+<!-- 整合hibernate合spring -->
+	<bean name="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.format_sql">true</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>	
+		<property name="mappingDirectoryLocations" value="classpath:cn/ldm/bean" ></property>
+	</bean>
+
+<!-- 配置事务管理一：aop事务 -->
+	<!--核心事务管理器  依赖sessiionFactory-->
+	<bean name="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager" >
+		<property name="sessionFactory" ref="sessionFactory" ></property>
+	</bean>
+	<tx:advice transaction-manager="transactionManager" id="advice" >
+		<tx:attributes>
+			<tx:method name="save*" read-only="false"/>
+			<tx:method name="delete*" read-only="false"/>
+			<tx:method name="update*" read-only="false"/>
+			<tx:method name="query*" read-only="false"/>
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut expression="execution(* cn.ldm.service.*ServiceImp.*(..))" id="aopc"/>
+		<aop:advisor advice-ref="advice" pointcut-ref="aopc"/>
+	</aop:config>
+
+<!-- 配置事务管理二：注解管理事务 -->
+	<!-- <tx:annotation-driven transaction-manager="transactionManager" /> -->
+	
+	<bean name="userdao" class="cn.ldm.dao.UserDaoImp">
+	<!--为模板注入session工厂  -->
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean name="userAction" class="cn.ldm.action.UserAction" scope="prototype">
+		<property name="userService" ref="userService" ></property>
+	</bean>
+	<bean name="userService" class="cn.ldm.service.UserServiceImp">
+		<property name="userdao" ref="userdao"></property>
+	</bean>
+	
+	<bean name="bdd" class="cn.ldm.dao.BaseDictDaoImp">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean name="baseAction" class="cn.ldm.action.BaseAction" scope="prototype">
+		<property name="bdc" ref="bdc" ></property>
+	</bean>
+	<bean name="bdc" class="cn.ldm.service.BaseDictServiceImp">
+		<property name="bdd" ref="bdd"></property>
+	</bean>
+	
+	<bean name="ld" class="cn.ldm.dao.LinkDaoImp">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean name="linkman" class="cn.ldm.action.LinkManAction" scope="prototype">
+		<property name="ls" ref="ls" ></property>
+	</bean>
+	<bean name="ls" class="cn.ldm.service.LinkServiceImp">
+		<property name="ld" ref="ld"></property>
+	</bean>
+	
+	<bean name="vd" class="cn.ldm.dao.VisitDaoImp">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	<bean name="visitAction" class="cn.ldm.action.VisitAction" scope="prototype">
+		<property name="vs" ref="vs" ></property>
+	</bean>
+	<bean name="vs" class="cn.ldm.service.VisitServiceImp">
+		<property name="vd" ref="vd"></property>
+	</bean>
+</beans>

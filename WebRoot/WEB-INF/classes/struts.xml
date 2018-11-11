@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+
+<!--spring已经是默认值，可以不用配置  -->
+	<!-- <constant name="struts.objectFactory" value="spring"></constant> -->
+
+	<package name="crm" namespace="" extends="struts-default">
+		<interceptors>
+			<interceptor name="myInterceptor" class="cn.ldm.interceptor.LoginInterceptor"></interceptor>
+			<interceptor-stack name="myStack">
+				<interceptor-ref name="myInterceptor">
+					<param name="excludeMethods">getLogin,aa</param>
+				</interceptor-ref>
+				<interceptor-ref name="defaultStack"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="myStack"></default-interceptor-ref>
+	
+		<global-results>
+			<result name="toLogin">/jsp/login.jsp</result>
+		</global-results>
+	
+		<action name="UserAction_*" class="userAction" method="{1}">
+			<result name="success">/jsp/menu.jsp</result>
+			<result name="toCount">/jsp/count.jsp</result>
+			<result name="error">/jsp/login.jsp</result>
+			<result name="toList">/jsp/customer/list.jsp</result>
+		</action>
+
+		<action name="BaseAction_*" class="baseAction" method="{1}">
+			<result name="success">/jsp/success.jsp</result>
+		</action>
+		
+		<action name="linkman_*" class="linkman" method="{1}">
+			<result name="success">/jsp/linkman/list.jsp</result>
+		</action>
+		
+		<action name="visitAction_*" class="visitAction" method="{1}">
+			<result name="success">/jsp/success.jsp</result>
+		</action>
+	</package>
+</struts>
